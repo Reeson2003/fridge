@@ -1,5 +1,6 @@
 defmodule NoHumanFridge do
   use GenServer
+  @human "human"
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -30,7 +31,7 @@ defmodule NoHumanFridge do
   #  %{:type => "fruit", :name => "apple"}
 
   def handle_cast({:create, %{:type => type, :name => name, expiry_date: expiry_date}}, state) do
-    if type == "human" do
+    if type == @human do
       state
     else
       case Map.fetch(state, name) do
@@ -58,6 +59,6 @@ defmodule NoHumanFridge do
 
 end
 
-# NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple"})
+# NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
 # NoHumanFridge.lookup(NoHumanFridge, "apple")
 # NoHumanFridge.delete(NoHumanFridge, "apple")
