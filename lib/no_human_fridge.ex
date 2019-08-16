@@ -40,20 +40,24 @@ defmodule NoHumanFridge do
       state
     else
       case Map.fetch(state, name) do
-        :error -> {@noreply, Map.put(state, name, 1)}
-        {:ok, number} -> {@noreply, Map.put(state, name, number + 1)}
+        :error -> {@noreply, Map.put(state, name, [expiry_date])}
+        {:ok, expiry_date_list} -> {@noreply, Map.put(state, name, expiry_date_list ++ [expiry_date])}
       end
     end
   end
 
-  def handle_cast({@delete, name}, state) do
+  def handle_cast({@delete, %{:name => name, expiry_date: expiry_date}}, state) do
     case Map.fetch(state, name) do
-      :error -> {@noreply, state}
-      {:ok, number} -> if number == 1 do
-                         {@noreply, Map.delete(state, name)}
-                       else
-                         {@noreply, Map.put(state, name, number - 1)}
-                       end
+      :error ->
+        {@noreply, state}
+      {:ok, expiry_date_list} ->
+        result = Enum.filter(expiry_date_list, fn date -> NaiveDateTime.compare(date, expiry_date) != :eq end)
+        if Enum.empty?result do
+          {@noreply, Map.delete(state, name)}
+        else
+          {@noreply, Map.put(state, name, result)}
+        end
+
     end
   end
 
@@ -66,4 +70,4 @@ end
 
 # NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
 # NoHumanFridge.lookup(NoHumanFridge, "apple")
-# NoHumanFridge.delete(NoHumanFridge, "apple")
+# NoHumanFridge.delete(NoHumanFridge, %{:name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
