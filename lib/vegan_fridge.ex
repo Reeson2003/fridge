@@ -7,16 +7,16 @@ defmodule VeganFridge do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
-  def lookup(server, name) do
-    GenServer.call(server, {:lookup, name})
+  def lookup(name) do
+    GenServer.call(__MODULE__, {:lookup, name})
   end
 
-  def create(server, name) do
-    GenServer.cast(server, {:create, name})
+  def create(name) do
+    GenServer.cast(__MODULE__, {:create, name})
   end
 
   def init(:ok) do
-    IO.puts("Started VeganFridge: #{inspect self}")
+    IO.puts("Started #{__MODULE__}: #{inspect self}")
     Process.send_after(self, :delete, 1000)
     {:ok, %{}}
   end
