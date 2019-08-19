@@ -95,17 +95,14 @@ defmodule NoHumanFridge do
     {@noreply, state}
   end
 
-  def handle_info(msg, state) do
-    case msg do
-      @clean -> clean(self)
-      _ -> IO.puts("ICE")
-    end
+  def handle_info(@clean, state) do
+    clean(self)
+    {@noreply, state}
+  end
+
+  def handle_info(_msg, state) do
+    IO.puts("ICE")
     {@noreply, state}
   end
 
 end
-
-# NaiveDateTime.utc_now()
-# NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# NoHumanFridge.create(NoHumanFridge, %{:type => "human", :name => "Oleg", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# NoHumanFridge.lookup(NoHumanFridge, "apple")

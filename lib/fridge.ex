@@ -15,10 +15,6 @@ defmodule Fridge do
     GenServer.call(server, {@lookup, name})
   end
 
-  def lookup(server) do
-    GenServer.call(server, @lookup)
-  end
-
   def create(server, name) do
     GenServer.cast(server, {@create, name})
   end
@@ -36,14 +32,6 @@ defmodule Fridge do
     IO.puts("Started Fridge: #{inspect self}")
     clean(self)
     {:ok, %{}}
-  end
-
-  def handle_call({@lookup, name}, _from, state) do
-    result = case Map.fetch(state, name) do
-      :error -> "#{name} not found"
-      {:ok, expiry_date_list} -> Enum.map(expiry_date_list, fn x -> "Name: #{name}, expiry date: #{x}" end)
-    end
-    {@reply, result, state}
   end
 
   def handle_call(@lookup, _from, state) do
@@ -90,16 +78,14 @@ defmodule Fridge do
     {@noreply, state}
   end
 
-  def handle_info(msg, state) do
-    case msg do
-      @clean -> clean(self)
-      _ -> IO.puts("ICE")
-    end
+  def handle_info(@clean, state) do
+    clean(self)
+    {@noreply, state}
+  end
+
+  def handle_info(_msg, state) do
+    IO.puts("ICE")
     {@noreply, state}
   end
 
 end
-
-# NaiveDateTime.utc_now()
-# Fridge.create(Fridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# Fridge.lookup(Fridge, "apple")

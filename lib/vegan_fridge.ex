@@ -81,17 +81,14 @@ defmodule VeganFridge do
     {@noreply, state}
   end
 
-  def handle_info(msg, state) do
-    case msg do
-      @clean -> clean(self)
-      _ -> IO.puts("ICE")
-    end
+  def handle_info(@clean, state) do
+    clean(self)
+    {@noreply, state}
+  end
+
+  def handle_info(_msg, state) do
+    IO.puts("ICE")
     {@noreply, state}
   end
 
 end
-
-# NaiveDateTime.utc_now()
-# VeganFridge.create(VeganFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# VeganFridge.create(VeganFridge, %{:type => "seafood", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# VeganFridge.lookup(VeganFridge, "apple")
