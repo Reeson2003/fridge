@@ -32,7 +32,7 @@ defmodule VeganFridge do
 
   def init(:ok) do
     IO.puts("Started VeganFridge: #{inspect self}")
-    Process.send_after(self, @clean, 1000)
+    clean(self)
     {:ok, %{}}
   end
 
@@ -44,12 +44,9 @@ defmodule VeganFridge do
     {@reply, result, state}
   end
 
-  #  %{:type => "human", :name => "Oleg"}
-  #  %{:type => "fruit", :name => "apple"}
-
   def handle_cast({@create, %{:type => type, :name => name, expiry_date: expiry_date}}, state) do
     if type == @seafood || type == @meat do
-      state
+      {@noreply, state}
     else
       case Map.fetch(state, name) do
         :error -> {@noreply, Map.put(state, name, [expiry_date])}
@@ -95,6 +92,6 @@ defmodule VeganFridge do
 end
 
 # NaiveDateTime.utc_now()
-# NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# NoHumanFridge.lookup(NoHumanFridge, "apple")
-# NoHumanFridge.delete(NoHumanFridge, %{:name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
+# VeganFridge.create(VeganFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
+# VeganFridge.create(VeganFridge, %{:type => "seafood", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
+# VeganFridge.lookup(VeganFridge, "apple")

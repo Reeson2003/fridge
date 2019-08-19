@@ -31,7 +31,7 @@ defmodule NoHumanFridge do
 
   def init(:ok) do
     IO.puts("Started NoHumanFridge: #{inspect self}")
-    Process.send_after(self, @clean, 1000)
+    clean(self)
     {:ok, %{}}
   end
 
@@ -43,12 +43,24 @@ defmodule NoHumanFridge do
     {@reply, result, state}
   end
 
-  #  %{:type => "human", :name => "Oleg"}
-  #  %{:type => "fruit", :name => "apple"}
+  def handle_call(@lookup, _from, state) do
+    result = Enum.reduce(
+      state,
+      [],
+      fn {name, expiry_date_list}, acc ->
+        acc ++ List.wrap(Enum.map(expiry_date_list, fn x -> "Name: #{name}, expiry date: #{x}" end))
+      end
+    )
+    if Enum.empty?(result) do
+      {@reply, :error, state}
+    else
+      {@reply, result, state}
+    end
+  end
 
   def handle_cast({@create, %{:type => type, :name => name, expiry_date: expiry_date}}, state) do
     if type == @human do
-      state
+      {@noreply, state}
     else
       case Map.fetch(state, name) do
         :error -> {@noreply, Map.put(state, name, [expiry_date])}
@@ -95,5 +107,5 @@ end
 
 # NaiveDateTime.utc_now()
 # NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
+# NoHumanFridge.create(NoHumanFridge, %{:type => "human", :name => "Oleg", :expiry_date =>  ~N[2000-01-01 00:00:00]})
 # NoHumanFridge.lookup(NoHumanFridge, "apple")
-# NoHumanFridge.delete(NoHumanFridge, %{:name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})

@@ -1,4 +1,4 @@
-defmodule NoHumanFridge do
+defmodule Fridge do
   use GenServer
   @reply :reply
   @noreply :noreply
@@ -15,6 +15,10 @@ defmodule NoHumanFridge do
     GenServer.call(server, {@lookup, name})
   end
 
+  def lookup(server) do
+    GenServer.call(server, @lookup)
+  end
+
   def create(server, name) do
     GenServer.cast(server, {@create, name})
   end
@@ -29,8 +33,8 @@ defmodule NoHumanFridge do
   end
 
   def init(:ok) do
-    IO.puts("Started NoHumanFridge: #{inspect self}")
-    Process.send_after(self, @clean, 1000)
+    IO.puts("Started Fridge: #{inspect self}")
+    clean(self)
     {:ok, %{}}
   end
 
@@ -42,8 +46,16 @@ defmodule NoHumanFridge do
     {@reply, result, state}
   end
 
-  #  %{:type => "human", :name => "Oleg"}
-  #  %{:type => "fruit", :name => "apple"}
+  def handle_call(@lookup, _from, state) do
+    result = Enum.reduce(
+      state,
+      [],
+      fn {name, expiry_date_list}, acc ->
+        acc ++ List.wrap(Enum.map(expiry_date_list, fn x -> "Name: #{name}, expiry date: #{x}" end))
+      end
+    )
+    {@reply, result, state}
+  end
 
   def handle_cast({@create, %{:type => type, :name => name, expiry_date: expiry_date}}, state) do
     case Map.fetch(state, name) do
@@ -89,6 +101,5 @@ defmodule NoHumanFridge do
 end
 
 # NaiveDateTime.utc_now()
-# NoHumanFridge.create(NoHumanFridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
-# NoHumanFridge.lookup(NoHumanFridge, "apple")
-# NoHumanFridge.delete(NoHumanFridge, %{:name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
+# Fridge.create(Fridge, %{:type => "fruit", :name => "apple", :expiry_date =>  ~N[2000-01-01 00:00:00]})
+# Fridge.lookup(Fridge, "apple")
