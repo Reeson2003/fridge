@@ -1,75 +1,45 @@
 defmodule NoHumanFridge do
   use GenServer
   @human "human"
-  @reply :reply
-  @noreply :noreply
-  @lookup :lookup
-  @create :create
-  @delete :delete
-  @clean :clean
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
   def lookup(server, name) do
-    GenServer.call(server, {@lookup, name})
+    GenServer.call(server, {:lookup, name})
   end
 
   def create(server, name) do
-    GenServer.cast(server, {@create, name})
-  end
-
-  def delete(server, food = %{:name => _, expiry_date: _}) do
-    GenServer.cast(server, {@delete, food})
-  end
-
-  defp clean(server) do
-    GenServer.cast(server, @delete)
-    Process.send_after(self, @clean, 1000)
+    GenServer.cast(server, {:create, name})
   end
 
   def init(:ok) do
     IO.puts("Started NoHumanFridge: #{inspect self}")
-    clean(self)
+    Process.send_after(self, :delete, 1000)
     {:ok, %{}}
   end
 
-  def handle_call({@lookup, name}, _from, state) do
+  def handle_call({:lookup, name}, _from, state) do
     result = case Map.fetch(state, name) do
       :error -> "#{name} not found"
       {:ok, expiry_date_list} -> Enum.map(expiry_date_list, fn x -> "Name: #{name}, expiry date: #{x}" end)
     end
-    {@reply, result, state}
+    {:reply, result, state}
   end
 
-  def handle_call(@lookup, _from, state) do
-    result = Enum.reduce(
-      state,
-      [],
-      fn {name, expiry_date_list}, acc ->
-        acc ++ List.wrap(Enum.map(expiry_date_list, fn x -> "Name: #{name}, expiry date: #{x}" end))
-      end
-    )
-    if Enum.empty?(result) do
-      {@reply, :error, state}
-    else
-      {@reply, result, state}
-    end
-  end
-
-  def handle_cast({@create, %{:type => type, :name => name, expiry_date: expiry_date}}, state) do
+  def handle_cast({:create, %{:type => type, :name => name, expiry_date: expiry_date}}, state) do
     if type == @human do
-      {@noreply, state}
+      {:noreply, state}
     else
       case Map.fetch(state, name) do
-        :error -> {@noreply, Map.put(state, name, [expiry_date])}
-        {:ok, expiry_date_list} -> {@noreply, Map.put(state, name, expiry_date_list ++ [expiry_date])}
+        :error -> {:noreply, Map.put(state, name, [expiry_date])}
+        {:ok, expiry_date_list} -> {:noreply, Map.put(state, name, expiry_date_list ++ [expiry_date])}
       end
     end
   end
 
-  def handle_cast(@delete, state) do
+  def handle_info(:delete, state) do
     expiry_date = NaiveDateTime.utc_now()
     state = Enum.reduce(
       state,
@@ -92,17 +62,8 @@ defmodule NoHumanFridge do
         end
       end
     )
-    {@noreply, state}
-  end
-
-  def handle_info(@clean, state) do
-    clean(self)
-    {@noreply, state}
-  end
-
-  def handle_info(_msg, state) do
-    IO.puts("ICE")
-    {@noreply, state}
+    Process.send_after(self, :delete, 1000)
+    {:noreply, state}
   end
 
 end
