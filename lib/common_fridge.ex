@@ -1,8 +1,8 @@
-defmodule NoHumanFridge do
+defmodule CommonFridge do
   use Fridge.Fridge
 
   def check_type(type) do
-    type != @"human"
+    true
   end
 
 end

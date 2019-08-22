@@ -7,7 +7,7 @@ defmodule Fridge.Application do
 
   defp children do
     [
-      {Fridge, name: Fridge},
+      {CommonFridge, name: CommonFridge},
       {NoHumanFridge, name: NoHumanFridge},
       {VeganFridge, name: VeganFridge}
     ]
